@@ -1,6 +1,5 @@
 version: "3.7"
 services:
-   image project php 8.0 + JIT
     project_schedule:
         build:
             args:
@@ -8,6 +7,7 @@ services:
                 uid: 1000
             context: ./docker
             dockerfile: Dockerfile
+        container_name: project_schedule
         image: laravel-app
         restart: unless-stopped
         working_dir: /var/www/
@@ -18,7 +18,7 @@ services:
             - redis
             - mysql
         networks:
-           - movida
+            - movida
 
     schedule:
         image: nginx:alpine
@@ -29,7 +29,7 @@ services:
         ports:
             - 8000:80
         networks:
-           - movida
+            - movida
 
     mysql:
         image: mysql:5.7.22
@@ -45,7 +45,7 @@ services:
         ports:
             - 3306:3306
         networks:
-           - movida
+            - movida
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin:latest
@@ -57,12 +57,12 @@ services:
         links:
             - mysql
         networks:
-           - movida
+            - movida
 
     redis:
         image: redis:latest
         networks:
-          - movida
+            - movida
 
     mongo:
         image: mongo
@@ -70,7 +70,7 @@ services:
         volumes:
             - ./data/db:/data/db
         networks:
-           - movida
+            - movida
 
     mongo-express:
         image: mongo-express
@@ -80,7 +80,7 @@ services:
         links:
             - mongo
         networks:
-           - movida
+            - movida
 
 
     redis-commander:
@@ -92,19 +92,19 @@ services:
         depends_on:
             - redis
         networks:
-           - movida
+            - movida
 
-   portainer:
-     image: portainer/portainer
-     command: -H unix:///var/run/docker.sock
-     restart: always
-     ports:
-       - 9001:9000
-     volumes:
-       - /var/run/docker.sock:/var/run/docker.sock
-       - portainer_data:/data
-     networks:
-         - movida
+    portainer:
+        image: portainer/portainer
+        command: -H unix:///var/run/docker.sock
+        restart: always
+        ports:
+            - 9002:9000
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+            - /data/portainer_data:/data
+        networks:
+            - movida
 networks:
     movida:
         driver: bridge
