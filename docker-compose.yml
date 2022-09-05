@@ -1,0 +1,99 @@
+version: "3.7"
+services:
+    # image project php 8.0 + JIT
+    project_schedule:
+        build:
+            args:
+                user: danyllo
+                uid: 1000
+            context: ./docker
+            dockerfile: Dockerfile
+        image: laravel-app
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        links:
+            - mongo
+            - redis
+            - mysql
+        networks:
+           - movida
+
+    schedule:
+        image: nginx:alpine
+        restart: unless-stopped
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx/:/etc/nginx/conf.d/
+        ports:
+            - 8000:80
+        networks:
+           - movida
+
+    mysql:
+        image: mysql:5.7.22
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_USER: ${DB_USERNAME}
+        volumes:
+            - ./.docker/mysql/dbdata:/var/lib/mysql
+        command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --innodb-buffer-pool-size=4G
+        ports:
+            - 3306:3306
+        networks:
+           - movida
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin:latest
+        ports:
+            - 9001:80
+        environment:
+            - UPLOAD_LIMIT=1G
+            - PMA_ARBITRARY=1
+        links:
+            - mysql
+        networks:
+           - movida
+
+    redis:
+        image: redis:latest
+        networks:
+          - movida
+
+    mongo:
+        image: mongo
+        restart: always
+        volumes:
+            - ./data/db:/data/db
+        networks:
+           - movida
+
+    mongo-express:
+        image: mongo-express
+        restart: always
+        ports:
+            - 8081:8081
+        links:
+            - mongo
+        networks:
+           - movida
+
+
+    redis-commander:
+        image: rediscommander/redis-commander
+        environment:
+            - REDIS_HOSTS=redis:redis:6379
+        ports:
+            - 8082:8081
+        depends_on:
+            - redis
+        networks:
+           - movida
+
+networks:
+    movida:
+        driver: bridge
